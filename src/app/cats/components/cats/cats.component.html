@@ -1,0 +1,16 @@
+<div class="cats-header">
+  <h1>Cats Facts</h1>
+</div>
+<div class="flex-group">
+  <div class="cats-input">
+    <app-search (searchTextChanged)="onSearchTextChanged($event)"></app-search>
+  </div>
+</div>
+<div class="cats-box container">
+  <app-cat *ngFor="let cat of cats$ | async" [cat]="cat"
+  ></app-cat>
+</div>
+<div class="flex">
+    <button *ngIf="page < 34" (click)="addFacts()">Загрузить ещё</button>
+</div>
+
