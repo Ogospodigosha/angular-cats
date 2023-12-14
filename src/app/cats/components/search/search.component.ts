@@ -11,25 +11,10 @@ import {ActivatedRoute, Router} from "@angular/router";
 export class SearchComponent  {
   searchText: string = '';
   @Output() searchTextChanged: EventEmitter<string> = new EventEmitter<string>();
-  private searchTextChangedSubject: Subject<string> = new Subject<string>();
-  constructor(private router: Router, private route: ActivatedRoute) {
-    this.searchTextChangedSubject.pipe(
-      debounceTime(300), // Задержка в миллисекундах
-      distinctUntilChanged()
-    ).subscribe(value => {
-      this.searchTextChanged.emit(value);
-      this.updateRouteParam(value);
-    });
-  }
+
+  constructor(private router: Router, private route: ActivatedRoute) {}
   onSearchTextChanged(text: string) {
     console.log("TEXT", text)
     this.searchTextChanged.emit(text);
-  }
-  private updateRouteParam(value: string): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { searchText: value },
-      queryParamsHandling: 'merge',
-    });
   }
 }
