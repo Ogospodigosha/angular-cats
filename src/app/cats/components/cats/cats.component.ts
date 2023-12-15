@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CatsService } from '../../services/cats.service';
-import {BehaviorSubject, debounceTime, distinctUntilChanged, tap} from 'rxjs';
-import { map } from 'rxjs/operators';
+import {BehaviorSubject, debounceTime, distinctUntilChanged, map} from 'rxjs';
 import { CatsFacts } from '../../models/cats.models';
-import {ActivatedRoute, NavigationExtras, Router} from "@angular/router";
+import { ActivatedRoute, NavigationExtras, Router } from "@angular/router";
 
 @Component({
   selector: 'app-cats',
@@ -14,27 +13,24 @@ export class CatsComponent implements OnInit {
   cats$: BehaviorSubject<CatsFacts[]> = new BehaviorSubject<CatsFacts[]>([]);
   page = 1;
   searchText: string = '';
-  originalCatsData: CatsFacts[] = [];
-  params = ''
+  params = '';
+
   constructor(private catsService: CatsService, private router: Router, private route: ActivatedRoute) {}
+
   ngOnInit(): void {
-    this.route.queryParams
-      .subscribe(params => {
-        this.params = params['searchText'];
-      })
+    this.route.queryParams.subscribe(params => {
+      this.params = params['searchText'];
+    });
+
+    this.catsService.getOriginalCatsData().subscribe((originalCatsData) => {
+      this.filterFacts(this.params);
+    });
+
     this.loadFacts();
   }
 
   loadFacts() {
-    this.catsService.getCats(this.page)
-      .pipe(
-        map(res => res.data),
-        tap(facts => {
-          this.originalCatsData = [...this.originalCatsData, ...facts];
-          this.filterFacts(this.params);
-        })
-      )
-      .subscribe();
+    this.catsService.getCats(this.page);
   }
 
   addFacts() {
@@ -42,14 +38,16 @@ export class CatsComponent implements OnInit {
     this.loadFacts();
   }
   filterFacts(params: string | undefined) {
-    if (params === '' || params === undefined) {
-      this.cats$.next([...this.originalCatsData]);
-    } else {
-      const filteredCats = this.originalCatsData.filter(cat => cat.fact.includes(params));
-      this.cats$.next(filteredCats);
-    }
-  }
+    const filterCondition = (cat: CatsFacts) => params === '' || params === undefined || cat.fact.includes(params);
 
+    const filteredCats$ = this.catsService.getOriginalCatsData().pipe(
+      map(cats => cats.filter(filterCondition))
+    );
+
+    filteredCats$.subscribe(filteredCats => {
+      this.cats$.next(filteredCats);
+    });
+  }
   onSearchTextChanged(searchText: string) {
     this.searchText = searchText;
     if (this.searchText === '') {
@@ -70,10 +68,11 @@ export class CatsComponent implements OnInit {
           queryParamsHandling: 'merge'
         });
         this.route.queryParams.subscribe(() => {
-          this.filterFacts(this.params);
+          this.catsService.getOriginalCatsData().subscribe((originalCatsData) => {
+            this.filterFacts(this.params);
+          });
         });
-      })
+      });
     }
-
   }
 }
