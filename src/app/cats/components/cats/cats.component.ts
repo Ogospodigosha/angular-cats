@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CatsService } from '../../services/cats.service';
-import {BehaviorSubject,  tap} from 'rxjs';
+import {BehaviorSubject, debounceTime, distinctUntilChanged, tap} from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CatsFacts } from '../../models/cats.models';
-import {ActivatedRoute, Router} from "@angular/router";
+import {ActivatedRoute, NavigationExtras, Router} from "@angular/router";
 
 @Component({
   selector: 'app-cats',
@@ -15,9 +15,14 @@ export class CatsComponent implements OnInit {
   page = 1;
   searchText: string = '';
   originalCatsData: CatsFacts[] = [];
+  params = ''
   constructor(private catsService: CatsService, private router: Router, private route: ActivatedRoute) {}
-
   ngOnInit(): void {
+    this.route.queryParams
+      .subscribe(params => {
+        this.params = params['searchText'];
+        console.log('this.params', this.params);
+      })
     this.loadFacts();
   }
 
@@ -27,7 +32,7 @@ export class CatsComponent implements OnInit {
         map(res => res.data),
         tap(facts => {
           this.originalCatsData = [...this.originalCatsData, ...facts];
-          this.filterFacts();
+          this.filterFacts(this.params);
         })
       )
       .subscribe();
@@ -37,17 +42,39 @@ export class CatsComponent implements OnInit {
     this.page++;
     this.loadFacts();
   }
-  filterFacts() {
-    if (this.searchText.trim() === '') {
+  filterFacts(params: string | undefined) {
+    if (params === '' || params === undefined) {
       this.cats$.next([...this.originalCatsData]);
     } else {
-      const filteredCats = this.originalCatsData.filter(cat => cat.fact.includes(this.searchText));
+      const filteredCats = this.originalCatsData.filter(cat => cat.fact.includes(params));
       this.cats$.next(filteredCats);
     }
   }
 
   onSearchTextChanged(searchText: string) {
     this.searchText = searchText;
-    this.filterFacts();
+    if (this.searchText === '') {
+      const navigationExtras: NavigationExtras = {
+        relativeTo: this.route,
+        replaceUrl: true,
+      };
+      this.router.navigate([], navigationExtras);
+    } else {
+      this.route.params
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged()
+        ).subscribe(() => {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { searchText: this.searchText },
+          queryParamsHandling: 'merge'
+        });
+        this.route.queryParams.subscribe(() => {
+          this.filterFacts(this.params);
+        });
+      })
+    }
+
   }
 }
