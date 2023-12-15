@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 
-import {BehaviorSubject, debounceTime, distinctUntilChanged, map} from 'rxjs';
+import {BehaviorSubject, debounceTime, distinctUntilChanged, map, Subscription} from 'rxjs';
 import { CatsFacts } from '../../models/cats.models';
 import { ActivatedRoute, NavigationExtras, Router } from "@angular/router";
 import {DataService} from "../../services/data.service";
@@ -10,18 +10,19 @@ import {DataService} from "../../services/data.service";
   templateUrl: './cats.component.html',
   styleUrls: ['./cats.component.css']
 })
-export class CatsComponent implements OnInit {
+export class CatsComponent implements OnInit, OnDestroy {
   cats$: BehaviorSubject<CatsFacts[]> = new BehaviorSubject<CatsFacts[]>([]);
   page = 1;
   searchText: string = '';
   params = '';
-
+  private filteredCatsSubscription: Subscription | undefined;
   constructor(private catsService: DataService, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.params = params['searchText'];
     });
+
 
     this.catsService.getOriginalCatsData().subscribe((originalCatsData) => {
       this.filterFacts(this.params);
@@ -41,11 +42,13 @@ export class CatsComponent implements OnInit {
   filterFacts(params: string | undefined) {
     const filterCondition = (cat: CatsFacts) => params === '' || params === undefined || cat.fact.includes(params);
 
-    const filteredCats$ = this.catsService.getOriginalCatsData().pipe(
-      map(cats => cats.filter(filterCondition))
-    );
+    if (this.filteredCatsSubscription) {          ///убиваю предыдущую подписку при повторном вызове filterFacts
+      this.filteredCatsSubscription.unsubscribe();
+    }
 
-    filteredCats$.subscribe(filteredCats => {
+    this.filteredCatsSubscription =  this.catsService.getOriginalCatsData().pipe(
+      map(cats => cats.filter(filterCondition))
+    ).subscribe((filteredCats: CatsFacts[]) => {
       this.cats$.next(filteredCats);
     });
   }
@@ -72,6 +75,12 @@ export class CatsComponent implements OnInit {
             this.filterFacts(this.params);
         });
       });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.filteredCatsSubscription) {
+      this.filteredCatsSubscription.unsubscribe(); //при размонтировании
     }
   }
 }
