@@ -13,7 +13,6 @@ export class SearchComponent  {
 
   constructor(private router: Router, private route: ActivatedRoute) {}
   onSearchTextChanged(text: string) {
-    console.log("TEXT", text)
     this.searchTextChanged.emit(text);
   }
 }

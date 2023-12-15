@@ -21,7 +21,6 @@ export class CatsComponent implements OnInit {
     this.route.queryParams
       .subscribe(params => {
         this.params = params['searchText'];
-        console.log('this.params', this.params);
       })
     this.loadFacts();
   }
@@ -62,7 +61,7 @@ export class CatsComponent implements OnInit {
     } else {
       this.route.params
         .pipe(
-          debounceTime(300),
+          debounceTime(1000),
           distinctUntilChanged()
         ).subscribe(() => {
         this.router.navigate([], {
