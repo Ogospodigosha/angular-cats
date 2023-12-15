@@ -69,9 +69,7 @@ export class CatsComponent implements OnInit {
           queryParamsHandling: 'merge'
         });
         this.route.queryParams.subscribe(() => {
-          this.catsService.getOriginalCatsData().subscribe((originalCatsData) => {
             this.filterFacts(this.params);
-          });
         });
       });
     }
