@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { CatsService } from '../../services/cats.service';
+
 import {BehaviorSubject, debounceTime, distinctUntilChanged, map} from 'rxjs';
 import { CatsFacts } from '../../models/cats.models';
 import { ActivatedRoute, NavigationExtras, Router } from "@angular/router";
+import {DataService} from "../../services/data.service";
 
 @Component({
   selector: 'app-cats',
@@ -15,7 +16,7 @@ export class CatsComponent implements OnInit {
   searchText: string = '';
   params = '';
 
-  constructor(private catsService: CatsService, private router: Router, private route: ActivatedRoute) {}
+  constructor(private catsService: DataService, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
