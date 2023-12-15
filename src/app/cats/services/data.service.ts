@@ -16,11 +16,11 @@ export class DataService {
   getCats(page: number) {
     return this.http.get<CatsFactsResponse>(`${environment.baseUrl}?page=${page}`)
       .pipe(
-        catchError((error: HttpErrorResponse) => this.catchErrorService.handleHttpError(error)),
         tap((res: CatsFactsResponse) => {
           const currentData = this.originalCatsData.value;
           this.originalCatsData.next([...currentData, ...res.data]);
-        })
+        }),
+        catchError((error: HttpErrorResponse) => this.catchErrorService.handleHttpError(error)),
       ).subscribe(res =>{});
   }
 
