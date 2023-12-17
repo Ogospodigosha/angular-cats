@@ -21,7 +21,7 @@ export class DataService {
           this.originalCatsData.next([...currentData, ...res.data]);
         }),
         catchError((error: HttpErrorResponse) => this.catchErrorService.handleHttpError(error)),
-      ).subscribe(res =>{});
+      )
   }
 
 

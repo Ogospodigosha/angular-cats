@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 
-import {BehaviorSubject, debounceTime, distinctUntilChanged, map, Subscription} from 'rxjs';
+import {BehaviorSubject, debounceTime, distinctUntilChanged, map, Subscription, switchMap} from 'rxjs';
 import { CatsFacts } from '../../models/cats.models';
 import { ActivatedRoute, NavigationExtras, Router } from "@angular/router";
 import {DataService} from "../../services/data.service";
@@ -32,7 +32,7 @@ export class CatsComponent implements OnInit, OnDestroy {
   }
 
   loadFacts() {
-    this.catsService.getCats(this.page);
+    this.catsService.getCats(this.page).subscribe();
   }
 
   addFacts() {
